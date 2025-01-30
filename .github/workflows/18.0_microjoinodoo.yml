@@ -22,7 +22,7 @@ jobs:
       - name: Set up Python version
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.12'
 
       - name: Create and start virtual environment
         run: |
@@ -82,6 +82,7 @@ jobs:
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_F326FE0769364520A20CCA95A8FA1486 }}
         env:
+          
           STARTUP_COMMAND: 'python odoo-bin -r ${{ secrets.DB_USER }} -w ${{ secrets.DB_PASSWORD }} --addons-path=addons -d mydb --db_host=${{ secrets.DB_HOST}}'
 
 
