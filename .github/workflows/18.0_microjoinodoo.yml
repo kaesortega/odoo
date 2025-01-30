@@ -81,6 +81,8 @@ jobs:
           app-name: 'microjoinOdoo'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_F326FE0769364520A20CCA95A8FA1486 }}
+        env:
+          PYTHON_VERSION: '3.12'
 
   run_odoo:
     runs-on: ubuntu-latest
