@@ -22,7 +22,7 @@ jobs:
       - name: Set up Python version
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.10'
 
       - name: Create and start virtual environment
         run: |
@@ -82,30 +82,6 @@ jobs:
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_F326FE0769364520A20CCA95A8FA1486 }}
         env:
-          PYTHON_VERSION: '3.12'
+          STARTUP_COMMAND: 'python odoo-bin -r ${{ secrets.DB_USER }} -w ${{ secrets.DB_PASSWORD }} --addons-path=addons -d mydb --db_host=${{ secrets.DB_HOST}}'
 
-  run_odoo:
-    runs-on: ubuntu-latest
-    needs: deploy
-    steps:
-      - name: Checkout code again (just in case)
-        uses: actions/checkout@v4
 
-      - name: Set up Python for Odoo
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install Odoo dependencies
-        run: |
-          pip install -r requirements.txt
-          
-      - name: Run Odoo application
-        run: |
-          python odoo-bin -r ${{ secrets.DB_USER }} -w ${{ secrets.DB_PASSWORD }} --addons-path=addons -d mydb --db_host=${{ secrets.DB_HOST}}
-        env:
-          DB_USER: ${{ secrets.DB_USER }}  # Definir el usuario de la base de datos en GitHub Secrets
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}  # Definir la contraseña de la base de datos en GitHub Secrets
-          ADDONS_PATH: '/path/to/your/addons'  # Ruta a tus addons (ajusta según tu estructura)
-          DB_NAME: 'mydb'  # Nombre de la base de datos
-          DB_HOST: ${{ secrets.DB_HOST }}
