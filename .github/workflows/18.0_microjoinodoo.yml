@@ -67,6 +67,12 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip
 
+      - name: Install ldap
+        run: sudo apt install -y libldap2-dev libsasl2-dev python3-dev build-essential
+        
+      - name: Install dependencias-previas
+        run: pip install setuptools wheel
+
       
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
