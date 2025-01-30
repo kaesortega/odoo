@@ -100,9 +100,10 @@ jobs:
           
       - name: Run Odoo application
         run: |
-          python odoo-bin -r ${{ secrets.DB_USER }} -w ${{ secrets.DB_PASSWORD }} --addons-path=addons -d mydb
+          python odoo-bin -r ${{ secrets.DB_USER }} -w ${{ secrets.DB_PASSWORD }} --addons-path=addons -d mydb --db_host=${{ secrets.DB_HOST}}
         env:
           DB_USER: ${{ secrets.DB_USER }}  # Definir el usuario de la base de datos en GitHub Secrets
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}  # Definir la contraseña de la base de datos en GitHub Secrets
           ADDONS_PATH: '/path/to/your/addons'  # Ruta a tus addons (ajusta según tu estructura)
           DB_NAME: 'mydb'  # Nombre de la base de datos
+          DB_HOST: ${{ secrets.DB_HOST }}
