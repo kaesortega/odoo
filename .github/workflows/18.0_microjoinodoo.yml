@@ -57,6 +57,11 @@ jobs:
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+    env:
+      AZURE_WEBAPP_NAME: 'microjoinOdoo'     # set this to your application's name
+      WORKING_DIRECTORY: '.'        # set this to the path to your path of working directory inside github repository, defaults to the repository root
+      PYTHON_VERSION: '3.12'
+      STARTUP_COMMAND: 'python odoo-bin -r ${{ secrets.DB_USER }} -w ${{ secrets.DB_PASSWORD }} --addons-path=addons -d mydb --db_host=${{ secrets.DB_HOST}}'
 
     
     steps:
@@ -68,17 +73,32 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip
 
-      - name: Install ldap
-        run: sudo apt install -y libldap2-dev libsasl2-dev python3-dev build-essential
-        
-      - name: Install dependencias-previas
-        run: pip install setuptools wheel
 
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12' 
-      
+
+      # Azure login
+      - uses: azure/login@v1
+        with:
+         creds: ${{ secrets.AZURE_CREDENTIALS_GITHUB_SECRET }}
+      - uses: azure/appservice-settings@v1
+        with:
+         app-name: ${{ env.AZURE_WEBAPP_NAME }}
+         mask-inputs: false
+         general-settings-json: '{"linuxFxVersion": "PYTHON|${{ env.PYTHON_VERSION }}"}' #'General configuration settings as Key Value pairs'
+      # deploy web app
+      - uses: azure/webapps-deploy@v2
+        with:
+         app-name: ${{ env.AZURE_WEBAPP_NAME }}
+         package: ${{ env.WORKING_DIRECTORY }}
+         startup-command: ${{ env.STARTUP_COMMAND }}
+      # Azure logout
+      - name: logout
+        run: |
+         az logout
+          
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v2
         id: deploy-to-webapp
@@ -86,11 +106,7 @@ jobs:
           app-name: 'microjoinOdoo'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_F326FE0769364520A20CCA95A8FA1486 }}
-        env:
-          AZURE_WEBAPP_NAME: 'microjoinOdoo'     # set this to your application's name
-          WORKING_DIRECTORY: '.'        # set this to the path to your path of working directory inside github repository, defaults to the repository root
-          PYTHON_VERSION: '3.12'
-          STARTUP_COMMAND: 'python odoo-bin -r ${{ secrets.DB_USER }} -w ${{ secrets.DB_PASSWORD }} --addons-path=addons -d mydb --db_host=${{ secrets.DB_HOST}}'
+        
 
         
 
