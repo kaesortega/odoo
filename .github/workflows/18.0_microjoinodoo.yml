@@ -1,77 +1,103 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-# More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
-
-name: Build and deploy Python app to Azure Web App - microjoinOdoo
+name: Build and Deploy Python App to Azure Web App
 
 on:
   push:
     branches:
-      - 18.0
-  workflow_dispatch:
+      - 18.0  # La rama que deseas usar para activar este flujo de trabajo
+  workflow_dispatch:  # Permite disparar el flujo manualmente
 
 jobs:
-  build-and-deploy:
-    environment:
-      name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-    env:
-      AZURE_WEBAPP_NAME: 'microjoinOdoo'     # set this to your application's name
-      WORKING_DIRECTORY: '.'        # set this to the path to your path of working directory inside github repository, defaults to the repository root
-      PYTHON_VERSION: '3.12'
-      STARTUP_COMMAND: 'python odoo-bin -r ${{ secrets.DB_USER }} -w ${{ secrets.DB_PASSWORD }} --addons-path=addons -d mydb --db_host=${{ secrets.DB_HOST}}'
-      
+  build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read # Requerido para `actions/checkout`
 
     steps:
+      # Paso 1: Checkout del código
       - uses: actions/checkout@v4
 
+      # Paso 2: Configurar la versión de Python
       - name: Set up Python version
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
+      # Paso 3: Crear y activar el entorno virtual
       - name: Create and start virtual environment
         run: |
           python -m venv venv
           source venv/bin/activate
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
           
-      - name: Install ldap
+      # Paso 4: Instalar dependencias necesarias para compilar python-ldap
+      - name: Install ldap dependencies
         run: sudo apt install -y libldap2-dev libsasl2-dev python3-dev build-essential
-        
-      - name: Install dependencias-previas
+
+      # Paso 5: Instalar dependencias previas (como setuptools y wheel)
+      - name: Install build dependencies
         run: pip install setuptools wheel
-      
+
+      # Paso 6: Instalar las dependencias de tu aplicación
       - name: Install dependencies
         run: pip install -r requirements.txt
-        
 
-      # Azure login
-      - uses: azure/login@v1
+      # Paso 7: (Opcional) Ejecutar pruebas si las tienes
+      # - name: Run tests
+      #   run: pytest
+
+      # Paso 8: Empacar el artefacto para el despliegue
+      - name: Zip artifact for deployment
+        run: zip release.zip ./* -r
+
+      # Paso 9: Subir el artefacto a la siguiente etapa (deploy)
+      - name: Upload artifact for deployment jobs
+        uses: actions/upload-artifact@v4
         with:
-         creds: ${{ secrets.AZURE_CREDENTIALS_GITHUB_SECRET }}
-      - uses: azure/appservice-settings@v1
+          name: python-app
+          path: |
+            release.zip
+            !venv/
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: 'Production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+
+    steps:
+      # Paso 1: Descargar el artefacto del trabajo de construcción
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v4
         with:
-         app-name: ${{ env.AZURE_WEBAPP_NAME }}
-         mask-inputs: false
-         general-settings-json: '{"linuxFxVersion": "PYTHON|${{ env.PYTHON_VERSION }}"}' #'General configuration settings as Key Value pairs'
-      # deploy web app
-      - uses: azure/webapps-deploy@v2
+          name: python-app
+
+      # Paso 2: Descomprimir el artefacto para el despliegue
+      - name: Unzip artifact for deployment
+        run: unzip release.zip
+
+      # Paso 3: Configurar la CLI de Azure
+      - name: Set up Azure CLI
+        uses: azure/cli-action@v1
         with:
-         app-name: ${{ env.AZURE_WEBAPP_NAME }}
-         package: ${{ env.WORKING_DIRECTORY }}
-         startup-command: ${{ env.STARTUP_COMMAND }}
-      # Azure logout
-      - name: logout
+          azcliversion: '2.27.0'
+
+      # Paso 4: Iniciar sesión en Azure
+      - name: Azure Login
         run: |
-         az logout
+          az login --service-principal -u ${{ secrets.AZURE_APP_ID }} -p ${{ secrets.AZURE_PASSWORD }} --tenant ${{ secrets.AZURE_TENANT_ID }}
+          az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-        
+      # Paso 5: Desplegar la aplicación en Azure Web App
+      - name: Deploy to Azure Web App
+        run: |
+          az webapp deploy --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.APP_NAME }} --src-path ./release.zip
 
-        
+      # Paso 6: Configurar el comando de inicio con tu comando personalizado
+      - name: Set custom startup command
+        run: |
+          az webapp config appsettings set --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.APP_NAME }} --settings WEBSITE_STARTUP_COMMAND="python odoo-bin -r ${{ secrets.DB_USER }} -w ${{ secrets.DB_PASSWORD }} --addons-path=addons -d mydb --db_host=${{ secrets.DB_HOST }}"
 
+      # Paso 7: Reiniciar la Web App para aplicar configuraciones
+      - name: Restart Web App
+        run: |
+          az webapp restart --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.APP_NAME }}
