@@ -75,30 +75,16 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip
 
-      # Paso 3: Configurar la CLI de Azure
-      - name: Set up Azure CLI
+      # Paso 3: Nos logueamos, desplegamos e iniciamos la aplicacion
+      - name: Logueo en azure, despliegue e inicializacion de la aplicacion
         uses: Azure/cli@v2.1.0
         with:
           azcliversion: '2.27.0'
+          inlineScript: |
+            az login --service-principal -u ${{ secrets.AZURE_APP_ID }} -p ${{ secrets.AZURE_PASSWORD }} --tenant ${{ secrets.AZURE_TENANT_ID }}
+            az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+            az webapp deploy --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.APP_NAME }} --src-path ./release.zip
+            az webapp config appsettings set --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.APP_NAME }} --settings WEBSITE_STARTUP_COMMAND="python odoo-bin -r ${{ secrets.DB_USER }} -w ${{ secrets.DB_PASSWORD }} --addons-path=addons -d mydb --db_host=${{ secrets.DB_HOST }}"
+            az webapp restart --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.APP_NAME }}
+
           
-
-      # Paso 4: Iniciar sesión en Azure
-      - name: Azure Login
-        run: |
-          az login --service-principal -u ${{ secrets.AZURE_APP_ID }} -p ${{ secrets.AZURE_PASSWORD }} --tenant ${{ secrets.AZURE_TENANT_ID }}
-          az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      # Paso 5: Desplegar la aplicación en Azure Web App
-      - name: Deploy to Azure Web App
-        run: |
-          az webapp deploy --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.APP_NAME }} --src-path ./release.zip
-
-      # Paso 6: Configurar el comando de inicio con tu comando personalizado
-      - name: Set custom startup command
-        run: |
-          az webapp config appsettings set --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.APP_NAME }} --settings WEBSITE_STARTUP_COMMAND="python odoo-bin -r ${{ secrets.DB_USER }} -w ${{ secrets.DB_PASSWORD }} --addons-path=addons -d mydb --db_host=${{ secrets.DB_HOST }}"
-
-      # Paso 7: Reiniciar la Web App para aplicar configuraciones
-      - name: Restart Web App
-        run: |
-          az webapp restart --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.APP_NAME }}
