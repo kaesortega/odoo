@@ -77,9 +77,10 @@ jobs:
 
       # Paso 3: Configurar la CLI de Azure
       - name: Set up Azure CLI
-        uses: azure/cli-action@v1
+        uses: Azure/cli@v2.1.0
         with:
           azcliversion: '2.27.0'
+          
 
       # Paso 4: Iniciar sesión en Azure
       - name: Azure Login
