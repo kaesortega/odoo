@@ -75,14 +75,16 @@ jobs:
 
       
       - name: 'Deploy to Azure Web App'
-        uses: azure/webapps-deploy@v3
+        uses: azure/webapps-deploy@v4
         id: deploy-to-webapp
         with:
           app-name: 'microjoinOdoo'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_F326FE0769364520A20CCA95A8FA1486 }}
-        env:
-          PYTHON_VERSION: '3.12'
-          STARTUP_COMMAND: 'python odoo-bin -r ${{ secrets.DB_USER }} -w ${{ secrets.DB_PASSWORD }} --addons-path=addons -d mydb --db_host=${{ secrets.DB_HOST}}'
+        #env:
+        #  AZURE_WEBAPP_NAME: 'microjoinOdoo'     # set this to your application's name
+        #  WORKING_DIRECTORY: '.'        # set this to the path to your path of working directory inside github repository, defaults to the repository root
+        #  PYTHON_VERSION: '3.12'
+        #  STARTUP_COMMAND: 'python odoo-bin -r ${{ secrets.DB_USER }} -w ${{ secrets.DB_PASSWORD }} --addons-path=addons -d mydb --db_host=${{ secrets.DB_HOST}}'
 
 
