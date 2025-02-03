@@ -99,13 +99,13 @@ jobs:
         run: |
          az logout
           
-      - name: 'Deploy to Azure Web App'
-        uses: azure/webapps-deploy@v2
-        id: deploy-to-webapp
-        with:
-          app-name: 'microjoinOdoo'
-          slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_F326FE0769364520A20CCA95A8FA1486 }}
+      #- name: 'Deploy to Azure Web App'
+        #uses: azure/webapps-deploy@v2
+        #id: deploy-to-webapp
+        #with:
+          #app-name: 'microjoinOdoo'
+          #slot-name: 'Production'
+          #publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_F326FE0769364520A20CCA95A8FA1486 }}
         
 
         
