@@ -39,7 +39,7 @@ jobs:
       # Paso 6: Modificar el archivo requirements.txt
       - name: Update python_version in requirements.txt
         run: |
-          sed -i 's/python_version/"3.12"/' ./requirements.txtt
+          sed -i 's/python_version/"3.12"/' requirements.txt
 
       # Paso 7: Instalar las dependencias de tu aplicación
       - name: Install dependencies
