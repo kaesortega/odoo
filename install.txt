@@ -1,0 +1,16 @@
+======================================
+INSTALAR ODOO
+======================================
+
+1. Descargar el codigo fuente desde github
+2. Descargar PostgreSQL
+3. Instalar las dependencias
+	3.1 pip install -r requirements.txt
+	3.2 pip install setuptools wheel
+
+az ad sp create-for-rbac --name "my-github-actions-sp" --role contributor \
+  --scopes /subscriptions/60a06348-6e90-4e8d-8368-daca3f584516/resourceGroups/demostration \
+  --sdk-auth
+
+
+
